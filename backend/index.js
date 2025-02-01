@@ -22,8 +22,8 @@ const __dirname = path.resolve();
 const app = express();
 
 // use express json
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //use cors
 app.use(cors());
@@ -44,10 +44,10 @@ app.get('/api', function(req, res){
   res.json({ message: 'Welcome to restaurant api' });
 });
 
-app.use(express.static(path.join(__dirname, './restaurant_management/')));
-app.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname, './restaurant_management/index.html'))
-});
+// app.use(express.static(path.join(__dirname, './restaurant_management/')));
+// app.get('/*', function (req, res) {
+//  res.sendFile(path.join(__dirname, './restaurant_management/index.html'))
+// });
 
 
 

@@ -1,0 +1,83 @@
+version: '3.9'
+
+services:
+
+  # Frontend Service
+  frontend:
+    image: frontend
+    container_name: frontend_container
+    restart: unless-stopped
+    ports:
+      - "80:80"  
+    networks:
+      - restaurant-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Backend Service
+  backend:
+    image: backend 
+    container_name: backend_container
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+    volumes:
+      - backend-logs:/app/logs
+    expose:
+      - "8001"  # Internal communication only
+    networks:
+      - restaurant-network
+    depends_on:
+      - mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.0.40
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER} 
+    expose:
+      - "${MYSQL_PORT}"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db_restaurant.sql:/docker-entrypoint-initdb.d/db_restaurant.sql
+    networks:
+      - restaurant-network
+
+  # Redis Service
+  redis:
+    image: redis:7.4.2-alpine     
+    container_name: redis_container
+    restart: unless-stopped
+    env_file: .env
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD} --timeout 300
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data 
+    networks:
+      - restaurant-network
+
+ 
+volumes:
+  backend-logs:
+  redis-data:
+  db-data:
+
+networks:
+  restaurant-network:
+    driver: bridge
